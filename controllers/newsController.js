@@ -3,15 +3,15 @@ const News = require("../models/newsModel");
 
 // @desc    Get all news
 // @route   GET /api/news
-// @access  Private
+// @access  Public
 const getNews = asyncHandler(async (req, res) => {
-  const gnews = await News.find({});
+  const gnews = await News.find().limit(4).sort({ createdAt: -1 });
   res.json(gnews);
 });
 
 // @desc    Create news
 // @route   POST /api/news
-// @access  Private
+// @access  Public
 const setNews = asyncHandler(async (req, res) => {
   if (!req.body.text) {
     res.status(400);
@@ -28,7 +28,7 @@ const setNews = asyncHandler(async (req, res) => {
 
 // @desc    Update news
 // @route   PUT /api/news/:id
-// @access  Private
+// @access  Public
 const updateNews = asyncHandler(async (req, res) => {
   const gnews = await News.findById(req.params.id);
   if (!gnews) {
@@ -43,14 +43,15 @@ const updateNews = asyncHandler(async (req, res) => {
 
 // @desc    Delete news
 // @route   DELETE /api/news/:id
-// @access  Private
+// @access  Public
 const deleteNews = asyncHandler(async (req, res) => {
   const gnews = await News.findById(req.params.id);
   if (!gnews) {
     res.status(404);
     throw new Error("News not found");
   }
-  await News.findOneAndDelete(req.params.id);
+
+  await News.findByIdAndDelete(req.params.id);
 
   res.json({ message: `Delete News ${req.params.id}` });
 });
