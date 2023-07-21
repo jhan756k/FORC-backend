@@ -1,12 +1,18 @@
 const asyncHandler = require("express-async-handler");
 const News = require("../models/newsModel");
+const moment = require("moment");
 
-// @desc    Get all news
+// @desc    Get 4 news
 // @route   GET /api/news
 // @access  Public
 const getNews = asyncHandler(async (req, res) => {
+  // if (req.query.get === "all") {
+  //   const gnews = await News.find().sort({ createdAt: -1 });
+  //   return res.json(gnews);
+  // }
+
   const gnews = await News.find().limit(4).sort({ createdAt: -1 });
-  res.json(gnews);
+  return res.json(gnews);
 });
 
 // @desc    Create news
@@ -21,6 +27,7 @@ const setNews = asyncHandler(async (req, res) => {
   const gnews = await News.create({
     title: req.body.title,
     text: req.body.text,
+    date: String(moment().format("YYYY-MM-DD HH:mm:ss")),
   });
 
   res.json(gnews);
@@ -45,6 +52,11 @@ const updateNews = asyncHandler(async (req, res) => {
 // @route   DELETE /api/news/:id
 // @access  Public
 const deleteNews = asyncHandler(async (req, res) => {
+  // if (req.params.id == "all") {
+  //   await News.deleteMany({});
+  //   return res.json({ message: `Delete all News` });
+  // }
+
   const gnews = await News.findById(req.params.id);
   if (!gnews) {
     res.status(404);

@@ -1,8 +1,12 @@
 const mongoose = require("mongoose");
-const moment = require("moment");
 
 const newsSchema = mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
     title: {
       type: String,
       required: true,
@@ -12,11 +16,10 @@ const newsSchema = mongoose.Schema(
       required: true,
     },
     date: {
-      type: String,
-      default: moment().format("YYYY-MM-DD HH:mm:ss"),
+      type: String
     }
   },
-  { timestamps: false}
+  { timestamps: true}
 );
 
 module.exports = mongoose.model("News", newsSchema);
