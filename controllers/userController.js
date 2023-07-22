@@ -45,8 +45,8 @@ const registerUser = asyncHandler(async (req, res) => {
 // @route   POST /api/users/login
 // @access  Public
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
+  const { name, password } = req.body;
+  const user = await User.findOne({ name });
 
   if (user && (await bcrypt.compare(password, user.password))) {
     res.json({
@@ -63,11 +63,12 @@ const loginUser = asyncHandler(async (req, res) => {
   res.json({ message: "User logged in" });
 });
 
-// @desc    Get roled user data
+// @desc    Get all user data
 // @route   GET /api/users
 // @access  Public
 const getUserData = asyncHandler(async (req, res) => {
-  const users = await User.find({role: "member"});
+  const users = await User.find({})
+  // { role: "member" }
   res.json(users);
 });
 
@@ -86,10 +87,37 @@ const deleteUser = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Update user
+// @route   PUT /api/users/:id
+// @access  Private
+const updateUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (user) {
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    user.role = req.body.role || user.role;
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(req.body.password, salt);
+    }
+    const updatedUser = await user.save();
+    res.json({
+      _id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      token: generateToken(updatedUser._id),
+    });
+  } else {
+    res.status(404);
+    throw new Error("User not found");
+  }
+});
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
 };
 
-module.exports = { registerUser, loginUser, getUserData, deleteUser };
+module.exports = { registerUser, loginUser, getUserData, deleteUser, updateUser };
