@@ -8,15 +8,14 @@ const bcrypt = require("bcryptjs");
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
-  if (!name || !email || !password) {
-    res.status(400);
-    throw new Error("Please fill all fields");
-  }
-
+  const nameExists = await User.findOne({ name });
   const userExists = await User.findOne({ email });
+
+  if (nameExists) {
+    res.status(400).json({ message: "이미 존재하는 아이디입니다." });
+  }
   if (userExists) {
-    res.status(400);
-    throw new Error("User already exists");
+    res.status(400).json({ message: "이미 존재하는 이메일입니다." });
   }
 
   const salt = await bcrypt.genSalt(10);
@@ -30,14 +29,11 @@ const registerUser = asyncHandler(async (req, res) => {
 
   if (user) {
     res.status(201).json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      token: generateToken(user._id),
+      token: generateToken(user),
+      message: "회원가입이 완료되었습니다.",
     });
   } else {
-    res.status(400);
-    throw new Error("Invalid user data");
+    res.status(400).json({ message: "잘못된 유저 정보입니다." });
   }
 });
 
@@ -47,27 +43,28 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   const { name, password } = req.body;
   const user = await User.findOne({ name });
+  let isMatch;
+  if (user) isMatch = await bcrypt.compare(password, user.password);
 
-  if (user && (await bcrypt.compare(password, user.password))) {
-    res.json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      token: generateToken(user._id),
+  if (user && isMatch) {
+    res.status(200).json({
+      token: generateToken(user),
+      message: "로그인이 완료되었습니다.",
     });
   } else {
-    res.status(401);
-    throw new Error("Invalid email or password");
+    if (!user) {
+      res.status(404).json({ message: "존재하지 않는 아이디입니다." });
+    } else if (!isMatch) {
+      res.status(401).json({ message: "비밀번호가 일치하지 않습니다." });
+    }
   }
-
-  res.json({ message: "User logged in" });
 });
 
 // @desc    Get all user data
 // @route   GET /api/users
 // @access  Public
 const getUserData = asyncHandler(async (req, res) => {
-  const users = await User.find({})
+  const users = await User.find({});
   // { role: "member" }
   res.json(users);
 });
@@ -76,10 +73,10 @@ const getUserData = asyncHandler(async (req, res) => {
 // @route   DELETE /api/users/:id
 // @access  Private
 const deleteUser = asyncHandler(async (req, res) => {
-  if (req.params.id === "all") {
-    await User.deleteMany({});
-    res.json({ message: "All users deleted" });
-  }
+  // if (req.params.id === "all") {
+  //   await User.deleteMany({});
+  //   res.json({ message: "All users deleted" });
+  // }
 
   const user = await User.findById(req.params.id);
   if (user) {
@@ -91,7 +88,7 @@ const deleteUser = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/:id
 // @access  Private
 const updateUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
+  const user = await User.findOne({ _id: req.params.id});
   if (user) {
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
@@ -102,11 +99,7 @@ const updateUser = asyncHandler(async (req, res) => {
     }
     const updatedUser = await user.save();
     res.json({
-      _id: updatedUser.id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      role: updatedUser.role,
-      token: generateToken(updatedUser._id),
+      token: generateToken(updatedUser),
     });
   } else {
     res.status(404);
@@ -114,10 +107,25 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 });
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
-  });
+const generateToken = (user) => {
+  return jwt.sign(
+    {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "1d",
+    }
+  );
 };
 
-module.exports = { registerUser, loginUser, getUserData, deleteUser, updateUser };
+module.exports = {
+  registerUser,
+  loginUser,
+  getUserData,
+  deleteUser,
+  updateUser,
+};
