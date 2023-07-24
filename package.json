@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "server": "nodemon index.js",
-    "dev": "concurrently \"npm run server\" \"cd ../front && npm start\""
+    "dev": "concurrently \"npm run server\" \"cd ../front && npm start\"",
+    "build": "webpack --mode production"
   },
   "author": "",
   "license": "ISC",
