@@ -73,10 +73,10 @@ const getUserData = asyncHandler(async (req, res) => {
 // @route   DELETE /api/users/:id
 // @access  Private
 const deleteUser = asyncHandler(async (req, res) => {
-  // if (req.params.id === "all") {
-  //   await User.deleteMany({});
-  //   res.json({ message: "All users deleted" });
-  // }
+  if (req.params.id === "all") {
+    await User.deleteMany({});
+    res.json({ message: "All users deleted" });
+  }
 
   const user = await User.findById(req.params.id);
   if (user) {
@@ -102,8 +102,7 @@ const updateUser = asyncHandler(async (req, res) => {
       token: generateToken(updatedUser),
     });
   } else {
-    res.status(404);
-    throw new Error("User not found");
+    res.status(404).json({ message: "User not found" });
   }
 });
 
