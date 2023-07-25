@@ -17,6 +17,10 @@ const newsSchema = mongoose.Schema(
     },
     date: {
       type: String
+    },
+    img: {
+      type: String,
+      default: "/images/newdoc.png"
     }
   },
   { timestamps: true}

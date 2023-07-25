@@ -24,7 +24,11 @@ const userSchema = mongoose.Schema(
     },
     role: {
       type: String,
-      default: "user",
+      default: "Visitor",
+    },
+    team: {
+      type: String,
+      default: "",
     }
   },
 
