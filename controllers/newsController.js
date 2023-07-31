@@ -6,12 +6,17 @@ const moment = require("moment");
 // @route   GET /api/news
 // @access  Public
 const getNews = asyncHandler(async (req, res) => {
-  // if (req.query.get === "all") {
-  //   const gnews = await News.find().sort({ createdAt: -1 });
-  //   return res.json(gnews);
-  // }
 
   const gnews = await News.find().limit(4).sort({ createdAt: -1 });
+  return res.json(gnews);
+});
+
+const getPageNews = asyncHandler(async (req, res) => {
+  const page = req.params.id;
+  const gnews = await News.find()
+    .limit(10)
+    .skip((page - 1) * 10)
+    .sort({ createdAt: -1 });
   return res.json(gnews);
 });
 
@@ -73,4 +78,5 @@ module.exports = {
   setNews,
   updateNews,
   deleteNews,
+  getPageNews,
 };
